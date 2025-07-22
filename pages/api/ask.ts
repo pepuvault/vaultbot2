@@ -23,6 +23,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   let context = '📡 Live Onchain Daten:\n';
 
+  // Hole Onchain-Daten für jedes erkannte Token
   for (const tokenName of mentionedTokens) {
     try {
       const tokenData = await getTokenStats(tokenName);
@@ -62,10 +63,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }),
     });
 
+    // Überprüfe, ob die GPT-Antwort erfolgreich war
+    if (!gptRes.ok) {
+      throw new Error(`GPT API Error: ${gptRes.statusText}`);
+    }
+
     const gptJson = await gptRes.json();
     const answer = (gptJson.choices?.[0]?.message?.content as string) || 'Fehler: Keine GPT-Antwort erhalten.';
     res.status(200).json({ answer });
   } catch (err: any) {
+    console.error('❌ Fehler bei GPT-Abfrage:', err);
     res.status(500).json({ answer: `GPT-Fehler: ${err.message}` });
   }
+}
+
 }
